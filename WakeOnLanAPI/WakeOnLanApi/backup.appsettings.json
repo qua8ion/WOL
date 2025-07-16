@@ -1,0 +1,28 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "DbConnectionString": "Server=192.168.88.100;Database=WakeOnLan_dev;User Id=sa;Password=some-password;TrustServerCertificate=True",
+  "Jwt": {
+    "Key": "mysupersecret_secretsecretsecretkey!123",
+    "Issuer": "WakeOnLan Auth",
+    "Audience": "UI App",
+    "ValidateLifetime": true,
+    "ExpireMinutes": 360,
+    "ValidateIssuer": true,
+    "ValidateAudience": true, 
+    "ValidateIssuerSigningKey": true
+  },
+  "MikroTik": {
+    "Host": "192.168.88.1",
+    "UserName": "router-user",
+    "Password": "router-password"
+  },
+  "SystemUser": {
+    "UserName": "system",
+    "Password": "some-password"
+  }
+}
