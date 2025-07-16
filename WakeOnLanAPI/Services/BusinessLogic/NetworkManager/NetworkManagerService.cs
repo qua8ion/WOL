@@ -3,29 +3,26 @@ using DbData.Entities;
 using Dto.AppSettings;
 using Dto.Services;
 using Dto.Services.NetworkManager;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Services.Crud.Base;
 using Services.DbTransactions.Abstracts;
 using Services.User.SystemScopeAccessor;
-using tik4net;
-using tik4net.Objects;
-using tik4net.Objects.Ip.DhcpServer;
 using WOLLib;
+using Services.BusinessLogic.NetworkManager.Clients;
 
 namespace Services.BusinessLogic.NetworkManager
 {
     public class NetworkManagerService : INetworkManagerService
     {
-        private readonly IOptions<MikroTikAppSettings> _mikroTikSettings;
+        private readonly IRouterClient _routerClient;
         private readonly ICrudService<Device> _deviceCrud;
         private readonly ISystemUserScopeAccessor _sysUserAccessor;
         private readonly ITransactionScopeFactory _scopeFactory;
 
-        public NetworkManagerService(IOptions<MikroTikAppSettings> mikroTikSettings, ISystemUserScopeAccessor sysUserAccessor, ICrudService<Device> deviceCrud, ITransactionScopeFactory scopeFactory)
+        public NetworkManagerService(IRouterClient routerClient, ISystemUserScopeAccessor sysUserAccessor, ICrudService<Device> deviceCrud, ITransactionScopeFactory scopeFactory)
         {
-            _mikroTikSettings = mikroTikSettings;
+            _routerClient = routerClient;
             _sysUserAccessor = sysUserAccessor;
             _deviceCrud = deviceCrud;
             _scopeFactory = scopeFactory;
@@ -94,23 +91,7 @@ namespace Services.BusinessLogic.NetworkManager
 
         private async Task<IEnumerable<DeviceModel>> GetDevicesFromRouterAsync()
         {
-            var settings = _mikroTikSettings.Value;
-            using var tikConn = ConnectionFactory.CreateConnection(TikConnectionType.Api);
-
-            await tikConn.OpenAsync(settings.Host, settings.UserName, settings.Password);
-
-            var dhcpLeases = await (Task.Run(() => tikConn.LoadAll<DhcpServerLease>()));
-
-            var devices = dhcpLeases.Select(async d => new DeviceModel
-            {
-                IpV4 = d.Address,
-                Mac = d.MacAddress,
-                Name = d.HostName,
-                Online = await WakeOnLanTools.PingIpAsync(IPAddress.Parse(d.Address)),
-                LastScan = DateTime.Now,
-            });
-
-            return (await Task.WhenAll(devices)) ?? [];
+            return await _routerClient.GetDevicesAsync();
         }
     }
 }

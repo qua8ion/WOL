@@ -5,82 +5,71 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-namespace WakeOnLanApi
+namespace WakeOnLanApi;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.Services.AddCors(options =>
         {
-            //WOLLib.PC pc; //чтобы дебаг работал
+            options.AddPolicy("AllowSpecificOrigin",
+                policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+        });
 
-            var builder = WebApplication.CreateBuilder(args);
+        builder.Services.Configure<JwtAppSettings>(builder.Configuration.GetSection("Jwt"));
+        builder.Services.Configure<RouterSshSettings>(builder.Configuration.GetSection("Ssh"));
+        builder.Services.Configure<SystemUserSettings>(builder.Configuration.GetSection("SystemUser"));
 
-            builder.Services.AddCors(options =>
+        var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtAppSettings>();
+
+        builder.Services.AddAuthorization();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
             {
-                options.AddPolicy("AllowSpecificOrigin",
-                    policy =>
-                    {
-                        //policy.WithOrigins("http://localhost:5173")
-                        policy.AllowAnyOrigin()
-                              .AllowAnyHeader()
-                              .AllowAnyMethod();
-                    });
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = jwtSettings?.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = jwtSettings?.Audience,
+                    ValidateLifetime = true,
+                    IssuerSigningKey = jwtSettings?.Key.GetSymmetricSecurityKey(),
+                    ValidateIssuerSigningKey = true
+                };
             });
 
-            builder.Services.Configure<JwtAppSettings>(builder.Configuration.GetSection("Jwt"));
-            builder.Services.Configure<MikroTikAppSettings>(builder.Configuration.GetSection("MikroTik"));
-            builder.Services.Configure<SystemUserSettings>(builder.Configuration.GetSection("SystemUser"));
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+        builder.Services.AddDbContext<Context>(option => option.UseSqlServer(builder.Configuration["DbConnectionString"]));
+        builder.Services.AddHttpContextAccessor();
 
-            var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtAppSettings>();
+        Services.Initialize.ServicesInit(builder.Services);
 
-            builder.Services.AddAuthorization();
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = jwtSettings?.Issuer,
-                        ValidateAudience = true,
-                        ValidAudience = jwtSettings?.Audience,
-                        ValidateLifetime = true,
-                        IssuerSigningKey = jwtSettings?.Key.GetSymmetricSecurityKey(),
-                        ValidateIssuerSigningKey = true
-                    };
-                });
+        var app = builder.Build();
 
-            // Add services to the container.
+        app.UseCors("AllowSpecificOrigin");
+        app.UseAuthentication();
+        app.UseAuthorization();
 
-            builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
-            builder.Services.AddDbContext<Context>(option => option.UseSqlServer(builder.Configuration["DbConnectionString"]));
-            builder.Services.AddHttpContextAccessor();
-            
-            Services.Initialize.ServicesInit(builder.Services);
-
-            var app = builder.Build();
-
-            app.UseCors("AllowSpecificOrigin");
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
-
-            app.UseHttpsRedirection();
-
-            app.UseAuthorization();
-
-
-            app.MapControllers();
-
-            app.Run();
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
+
+        app.UseHttpsRedirection();
+
+        app.MapControllers();
+
+        app.Run();
     }
 }

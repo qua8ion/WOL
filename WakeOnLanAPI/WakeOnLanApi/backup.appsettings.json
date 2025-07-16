@@ -16,10 +16,12 @@
     "ValidateAudience": true, 
     "ValidateIssuerSigningKey": true
   },
-  "MikroTik": {
-    "Host": "192.168.88.1",
+  "Ssh": {
+    "Host": "192.168.1.1",
+    "Port": 22,
     "UserName": "router-user",
-    "Password": "router-password"
+    "Password": "router-password",
+    "Brand": "Keenetic"
   },
   "SystemUser": {
     "UserName": "system",
