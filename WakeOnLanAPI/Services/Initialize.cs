@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Services.Auth;
 using Services.BusinessLogic.NetworkManager;
+using Services.BusinessLogic.NetworkManager.Clients;
 using Services.Crud;
 using Services.Crud.Abstracts;
 using Services.Crud.Base;
@@ -26,6 +27,7 @@ public static class Initialize
 
         services.AddScoped<ICrudService<Device>, DeviceCrudService>();
 
+        services.AddScoped<IRouterClient, KeeneticRouterClient>();
         services.AddScoped<INetworkManagerService, NetworkManagerService>();
     }
 }

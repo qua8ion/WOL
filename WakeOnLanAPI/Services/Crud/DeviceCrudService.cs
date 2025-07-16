@@ -47,7 +47,7 @@ public class DeviceCrudService: CrudService<Device>
         var user = _userSecurityMangerSrv.GetUser();
         var query = base.GetAll(scope);
         
-        if(!user.Admin) query = query.Where(e => e.AlowedUsers.Any(u => u.Id == user.UserId));
+        if(!user.Admin) query = query.Where(e => e.AllowedUsers.Any(u => u.Id == user.UserId));
 
         return query;
     }

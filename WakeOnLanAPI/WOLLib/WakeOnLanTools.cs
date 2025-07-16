@@ -7,12 +7,6 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Nmap.NET;
-using Nmap.NET.Container;
-using tik4net;
-using tik4net.Objects;
-using tik4net.Objects.Ip;
-using tik4net.Objects.Ip.DhcpServer;
 
 namespace WOLLib
 {

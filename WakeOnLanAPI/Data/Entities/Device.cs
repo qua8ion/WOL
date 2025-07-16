@@ -8,5 +8,5 @@ public class Device: BaseEntity
     public string Mac { get; set; } = null!;
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public ICollection<User> AlowedUsers { get; set; }
+    public ICollection<User> AllowedUsers { get; set; }
 }
